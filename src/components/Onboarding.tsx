@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Headphones, Repeat, Heart, ChevronRight } from 'lucide-react';
+import { useSettings } from '../hooks/useSettings';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -28,32 +29,36 @@ const steps = [
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [stepIndex, setStepIndex] = useState(0);
+  const { settings } = useSettings();
 
   const isLast = stepIndex === steps.length - 1;
   const current = steps[stepIndex];
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-50 flex flex-col items-center justify-center px-6">
-      {/* Step content */}
+    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-6 ${
+      settings.darkMode ? 'bg-slate-900' : 'bg-stone-50'
+    }`}>
       <div className="flex flex-col items-center text-center gap-4 max-w-sm">
         {current.icon}
-        <h2 className="text-xl font-semibold text-slate-800">{current.title}</h2>
-        <p className="text-sm text-slate-500 leading-relaxed">{current.description}</p>
+        <h2 className={`text-xl font-semibold ${
+          settings.darkMode ? 'text-slate-100' : 'text-slate-800'
+        }`}>{current.title}</h2>
+        <p className={`text-sm leading-relaxed ${
+          settings.darkMode ? 'text-slate-400' : 'text-slate-500'
+        }`}>{current.description}</p>
       </div>
 
-      {/* Dots */}
       <div className="flex gap-2 mt-8">
         {steps.map((_, i) => (
           <div
             key={i}
             className={`w-2 h-2 rounded-full transition-colors ${
-              i === stepIndex ? 'bg-teal-500' : 'bg-slate-200'
+              i === stepIndex ? 'bg-teal-500' : settings.darkMode ? 'bg-slate-700' : 'bg-slate-200'
             }`}
           />
         ))}
       </div>
 
-      {/* Actions */}
       <div className="w-full max-w-sm mt-8 flex flex-col gap-3">
         <button
           onClick={() => {

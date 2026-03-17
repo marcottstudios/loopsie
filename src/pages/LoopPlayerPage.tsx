@@ -27,6 +27,7 @@ export default function LoopPlayerPage() {
 
   const cancelRef = useRef<(() => void) | null>(null);
   const repeatRef = useRef(0);
+  const playCurrentPhraseRef = useRef<(() => void) | null>(null);
 
   // Redirect if no phrases loaded
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function LoopPlayerPage() {
         repeatRef.current += 1;
         if (repeatRef.current < repeatCount) {
           // Play same phrase again
-          playCurrentPhrase();
+          playCurrentPhraseRef.current?.();
         } else {
           // Move to next phrase
           repeatRef.current = 0;
@@ -61,6 +62,10 @@ export default function LoopPlayerPage() {
 
     cancelRef.current = cancel;
   }, [phraseIds, currentIndex, template, speed, pauseDuration, repeatCount, advanceIndex]);
+
+  useEffect(() => {
+    playCurrentPhraseRef.current = playCurrentPhrase;
+  }, [playCurrentPhrase]);
 
   // Auto-play when index changes and isPlaying
   useEffect(() => {

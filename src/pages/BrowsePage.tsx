@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Repeat, X, Filter } from 'lucide-react';
+import { Repeat, X, Filter, Heart, Repeat2 } from 'lucide-react';
+import { liveQuery } from 'dexie';
 import { phrases as allPhrases } from '../data/content';
 import { categories } from '../data/categories';
 import { situations } from '../data/situations';
@@ -8,7 +9,7 @@ import { useLoopStore } from '../stores/loopStore';
 import { playPhraseSequence } from '../lib/AudioEngine';
 import PhraseCard from '../components/PhraseCard';
 import type { LengthBand, Category, Situation, Difficulty } from '../types';
-import { incrementTimesPlayed } from '../lib/db';
+import { incrementTimesPlayed, toggleFavorite, db } from '../lib/db';
 import { useSettings } from '../hooks/useSettings';
 
 const lengthBands: { id: LengthBand; label: string }[] = [
@@ -64,6 +65,23 @@ export default function BrowsePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [cancelFn, setCancelFn] = useState<(() => void) | null>(null);
 
+  // Favorite state from Dexie
+  const [favSet, setFavSet] = useState<Set<string>>(new Set());
+
+  // Long press state
+  const [longPressId, setLongPressId] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load favorites reactively
+  useEffect(() => {
+    const sub = liveQuery(() => db.phraseProgress.toArray()).subscribe({
+      next: (all) => {
+        setFavSet(new Set(all.filter((p) => p.isFavorite).map((p) => p.phraseId)));
+      },
+    });
+    return () => sub.unsubscribe();
+  }, []);
+
   const hasFilters = selectedCategory || selectedSituation || selectedLength || selectedDifficulty;
 
   const filtered = allPhrases.filter((p) => {
@@ -95,17 +113,38 @@ export default function BrowsePage() {
   const handleLoopThese = () => {
     const ids = filtered.map((p) => p.id);
     if (ids.length === 0) return;
-    setSource(
-      selectedCategory &&
-        !selectedSituation &&
-        !selectedLength &&
-        !selectedDifficulty
-        ? { type: 'category', categoryId: selectedCategory }
-        : { type: 'browse' },
-      ids
-    );
+    setSource({ type: 'browse' }, ids);
     navigate('/loop/play');
   };
+
+  const handleFavorite = useCallback(async (phraseId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    await toggleFavorite(phraseId);
+  }, []);
+
+  const handleLoopFrom = useCallback((phraseId: string) => {
+    const idx = filtered.findIndex((p) => p.id === phraseId);
+    if (idx === -1) return;
+    // Loop from this phrase through the rest, then wrap
+    const ids = [...filtered.slice(idx), ...filtered.slice(0, idx)].map((p) => p.id);
+    setSource({ type: 'browse' }, ids);
+    setLongPressId(null);
+    navigate('/loop/play');
+  }, [filtered, setSource, navigate]);
+
+  // Long press handlers
+  const startLongPress = useCallback((phraseId: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setLongPressId(phraseId);
+    }, 500);
+  }, []);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -117,39 +156,38 @@ export default function BrowsePage() {
     <div className="px-4 py-6 flex flex-col gap-4">
       {/* Filter toggle + Loop button */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-            settings.darkMode
-              ? 'bg-slate-950 border border-slate-800 text-slate-200'
-              : 'bg-white border border-slate-200 text-slate-600'
-          }`}
-        >
-          <Filter size={14} />
-          Filters {hasFilters ? '(active)' : ''}
-        </button>
-
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+              settings.darkMode
+                ? 'bg-slate-950 border border-slate-800 text-slate-200'
+                : 'bg-white border border-slate-200 text-slate-600'
+            }`}
+          >
+            <Filter size={14} />
+            Filters {hasFilters ? '(active)' : ''}
+          </button>
+
           {hasFilters && (
             <button
               onClick={clearAll}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                settings.darkMode ? 'text-slate-400' : 'text-slate-400'
-              }`}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400"
             >
               <X size={12} />
               Clear
             </button>
           )}
-          <button
-            onClick={handleLoopThese}
-            disabled={filtered.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500 text-white text-xs font-medium disabled:opacity-40"
-          >
-            <Repeat size={14} />
-            Loop these
-          </button>
         </div>
+
+        <button
+          onClick={handleLoopThese}
+          disabled={filtered.length === 0}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500 text-white text-xs font-medium disabled:opacity-40"
+        >
+          <Repeat size={14} />
+          Loop all
+        </button>
       </div>
 
       {/* Filter panels */}
@@ -243,16 +281,80 @@ export default function BrowsePage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map((phrase) => (
-            <button
-              key={phrase.id}
-              onClick={() => handlePlayPhrase(phrase.id)}
-              className="text-left"
-            >
-              <PhraseCard phrase={phrase} showPhonetics={settings.showPhonetics} />
-            </button>
-          ))}
+          {filtered.map((phrase) => {
+            const isFav = favSet.has(phrase.id);
+
+            return (
+              <div key={phrase.id} className="relative">
+                <button
+                  className="text-left w-full"
+                  onClick={() => handlePlayPhrase(phrase.id)}
+                  onMouseDown={() => startLongPress(phrase.id)}
+                  onMouseUp={cancelLongPress}
+                  onMouseLeave={cancelLongPress}
+                  onTouchStart={() => startLongPress(phrase.id)}
+                  onTouchEnd={cancelLongPress}
+                  onTouchCancel={cancelLongPress}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <PhraseCard phrase={phrase} showPhonetics={settings.showPhonetics} />
+                </button>
+
+                {/* Heart button */}
+                <button
+                  onClick={(e) => handleFavorite(phrase.id, e)}
+                  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
+                >
+                  <Heart
+                    size={18}
+                    className={isFav ? 'text-rose-500' : 'text-slate-300'}
+                    fill={isFav ? 'currentColor' : 'none'}
+                  />
+                </button>
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Long press popup */}
+      {longPressId && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setLongPressId(null)}
+          />
+          <div
+            className={`fixed left-4 right-4 bottom-24 z-50 rounded-xl border p-4 flex flex-col gap-3 shadow-lg ${
+              settings.darkMode
+                ? 'bg-slate-900 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}
+          >
+            <p className={`text-sm font-medium ${settings.darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+              {allPhrases.find((p) => p.id === longPressId)?.pt}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  handleFavorite(longPressId);
+                  setLongPressId(null);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-rose-500 text-white text-sm font-medium active:bg-rose-600"
+              >
+                <Heart size={16} fill={favSet.has(longPressId) ? 'currentColor' : 'none'} />
+                {favSet.has(longPressId) ? 'Unfavorite' : 'Favorite'}
+              </button>
+              <button
+                onClick={() => handleLoopFrom(longPressId)}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-teal-500 text-white text-sm font-medium active:bg-teal-600"
+              >
+                <Repeat2 size={16} />
+                Loop from here
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

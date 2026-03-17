@@ -35,7 +35,7 @@ function extractPhrases(): PhraseData[] {
   const idRegex = /id:\s*'([^']+)'/;
   const enRegex = /en:\s*(?:'([^']*(?:\\.[^']*)*)'|"([^"]*(?:\\.[^"]*)*)")/;
   const ptRegex = /pt:\s*'([^']*(?:\\.[^']*)*)'/;
-  const blocks = contentRaw.split(/\n  \{/).slice(1);
+  const blocks = contentRaw.split(/\n {2}\{/).slice(1);
 
   for (const block of blocks) {
     const idMatch = block.match(idRegex);

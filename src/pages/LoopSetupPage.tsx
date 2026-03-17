@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { liveQuery } from 'dexie';
-import { Repeat, BookOpen, FolderOpen, Heart, RotateCcw } from 'lucide-react';
+import { Repeat, BookOpen, FolderOpen, Heart, RotateCcw, Globe } from 'lucide-react';
 import { lessons } from '../data/lessons';
 import { phrases } from '../data/content';
 import { categories } from '../data/categories';
@@ -9,7 +9,7 @@ import { useLoopStore, type LoopSource } from '../stores/loopStore';
 import { db } from '../lib/db';
 import { useSettings } from '../hooks/useSettings';
 
-type SourceType = 'lesson' | 'category' | 'favorites' | 'review';
+type SourceType = 'all' | 'lesson' | 'category' | 'favorites' | 'review';
 
 export default function LoopSetupPage() {
   const navigate = useNavigate();
@@ -42,6 +42,8 @@ export default function LoopSetupPage() {
 
   const resolveIds = (): string[] => {
     switch (sourceType) {
+      case 'all':
+        return phrases.map((p) => p.id);
       case 'lesson': {
         const lesson = lessons.find((l) => l.id === selectedLessonId);
         return lesson?.phraseIds ?? [];
@@ -64,19 +66,22 @@ export default function LoopSetupPage() {
     if (isEmpty) return;
 
     const source: LoopSource =
-      sourceType === 'lesson'
-        ? { type: 'lesson', lessonId: selectedLessonId }
-        : sourceType === 'category'
-          ? { type: 'category', categoryId: selectedCategoryId }
-          : sourceType === 'favorites'
-            ? { type: 'favorites' }
-            : { type: 'review' };
+      sourceType === 'all'
+        ? { type: 'all' }
+        : sourceType === 'lesson'
+          ? { type: 'lesson', lessonId: selectedLessonId }
+          : sourceType === 'category'
+            ? { type: 'category', categoryId: selectedCategoryId }
+            : sourceType === 'favorites'
+              ? { type: 'favorites' }
+              : { type: 'review' };
 
     setSource(source, resolvedIds);
     navigate('/loop/play');
   };
 
   const sourceOptions: { type: SourceType; icon: React.ReactNode; label: string }[] = [
+    { type: 'all', icon: <Globe size={18} />, label: 'All Phrases' },
     { type: 'lesson', icon: <BookOpen size={18} />, label: 'Lesson' },
     { type: 'category', icon: <FolderOpen size={18} />, label: 'Category' },
     { type: 'favorites', icon: <Heart size={18} />, label: 'Favorites' },
@@ -88,7 +93,7 @@ export default function LoopSetupPage() {
       {/* Source picker */}
       <div>
         <p className="text-sm font-medium text-slate-600 mb-2">Source</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {sourceOptions.map((opt) => (
             <button
               key={opt.type}

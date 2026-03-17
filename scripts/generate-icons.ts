@@ -15,7 +15,6 @@ fs.mkdirSync(ICONS_DIR, { recursive: true });
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
 function generateSVG(size: number): string {
-  const padding = size * 0.15;
   const radius = size * 0.2;
   const fontSize = size * 0.55;
   const center = size / 2;

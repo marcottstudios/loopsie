@@ -22,7 +22,8 @@ export function useSettings() {
     const subscription = liveQuery(() => db.userSettings.get(SETTINGS_ID)).subscribe({
       next: (row) => {
         if (row) {
-          const { id: _, ...rest } = row;
+          const { id: _id, ...rest } = row;
+          void _id;
           setSettings({ ...defaults, ...rest });
         } else {
           setSettings(defaults);

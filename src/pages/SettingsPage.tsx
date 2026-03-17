@@ -4,16 +4,16 @@ import type { PlaybackTemplate, Speed, PauseDuration } from '../types';
 
 function SettingRow({
   label,
+  darkMode,
   children,
 }: {
   label: string;
+  darkMode: boolean;
   children: React.ReactNode;
 }) {
-  const { settings } = useSettings();
-
   return (
     <div className="flex flex-col gap-2">
-      <p className={`text-sm font-medium ${settings.darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+      <p className={`text-sm font-medium ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
         {label}
       </p>
       {children}
@@ -25,13 +25,13 @@ function OptionButtons<T extends string | number>({
   options,
   value,
   onChange,
+  darkMode,
 }: {
   options: { value: T; label: string }[];
   value: T;
   onChange: (v: T) => void;
+  darkMode: boolean;
 }) {
-  const { settings } = useSettings();
-
   return (
     <div className="flex gap-2">
       {options.map((opt) => (
@@ -41,7 +41,7 @@ function OptionButtons<T extends string | number>({
           className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
             value === opt.value
               ? 'bg-teal-500 text-white'
-              : settings.darkMode
+              : darkMode
                 ? 'bg-slate-950 border border-slate-800 text-slate-200'
                 : 'bg-white border border-slate-200 text-slate-600'
           }`}
@@ -58,26 +58,26 @@ function Toggle({
   onToggle,
   icon,
   label,
+  darkMode,
 }: {
   enabled: boolean;
   onToggle: () => void;
   icon: React.ReactNode;
   label: string;
+  darkMode: boolean;
 }) {
-  const { settings } = useSettings();
-
   return (
     <button
       onClick={onToggle}
       className={`w-full flex items-center justify-between p-3 rounded-lg border ${
-        settings.darkMode
+        darkMode
           ? 'bg-slate-950 border-slate-800'
           : 'bg-white border-slate-200'
       }`}
     >
       <div className="flex items-center gap-3">
         {icon}
-        <span className={`text-sm font-medium ${settings.darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+        <span className={`text-sm font-medium ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
           {label}
         </span>
       </div>
@@ -94,6 +94,7 @@ function Toggle({
 
 export default function SettingsPage() {
   const { settings, updateSettings, loading } = useSettings();
+  const dm = settings.darkMode;
 
   if (loading) {
     return (
@@ -105,7 +106,7 @@ export default function SettingsPage() {
 
   return (
     <div className="px-4 py-6 flex flex-col gap-5">
-      <SettingRow label="Playback Template">
+      <SettingRow label="Playback Template" darkMode={dm}>
         <OptionButtons<PlaybackTemplate>
           options={[
             { value: 'full', label: 'Full' },
@@ -114,15 +115,16 @@ export default function SettingsPage() {
           ]}
           value={settings.playbackTemplate}
           onChange={(v) => updateSettings({ playbackTemplate: v })}
+          darkMode={dm}
         />
-        <p className={`text-xs ${settings.darkMode ? 'text-slate-400' : 'text-slate-400'}`}>
+        <p className="text-xs text-slate-400">
           {settings.playbackTemplate === 'full' && 'English → Portuguese → Portuguese → pause'}
           {settings.playbackTemplate === 'standard' && 'English → Portuguese → pause'}
           {settings.playbackTemplate === 'pt-only' && 'Portuguese → pause'}
         </p>
       </SettingRow>
 
-      <SettingRow label="Speed">
+      <SettingRow label="Speed" darkMode={dm}>
         <OptionButtons<Speed>
           options={[
             { value: 0.75, label: 'Slow (0.75x)' },
@@ -130,10 +132,11 @@ export default function SettingsPage() {
           ]}
           value={settings.speed}
           onChange={(v) => updateSettings({ speed: v })}
+          darkMode={dm}
         />
       </SettingRow>
 
-      <SettingRow label="Pause Duration">
+      <SettingRow label="Pause Duration" darkMode={dm}>
         <OptionButtons<PauseDuration>
           options={[
             { value: 'short', label: 'Short' },
@@ -142,6 +145,7 @@ export default function SettingsPage() {
           ]}
           value={settings.pauseDuration}
           onChange={(v) => updateSettings({ pauseDuration: v })}
+          darkMode={dm}
         />
       </SettingRow>
 
@@ -156,6 +160,7 @@ export default function SettingsPage() {
           )
         }
         label="Show Phonetics"
+        darkMode={dm}
       />
 
       <Toggle
@@ -169,6 +174,7 @@ export default function SettingsPage() {
           )
         }
         label="Dark Mode"
+        darkMode={dm}
       />
     </div>
   );

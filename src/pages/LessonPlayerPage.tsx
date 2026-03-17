@@ -43,22 +43,27 @@ export default function LessonPlayerPage() {
       stop();
       clearMediaSession();
     };
-  }, [lesson, loadLesson, stop]);
+    // Only reload when lesson ID changes, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Media Session for lock screen controls
   useEffect(() => {
-    const phraseId = phraseIds[currentIndex];
+    const phraseId = lesson?.phraseIds[currentIndex];
     if (phraseId) {
       updateMediaSession({
         phraseId,
         isPlaying,
-        onPlay: playCurrent,
+        onPlay: () => {
+          incrementTimesPlayed(phraseId);
+          playCurrent();
+        },
         onPause: stop,
         onNext: next,
         onPrevious: previous,
       });
     }
-  }, [currentIndex, isPlaying, phraseIds, playCurrent, stop, next, previous]);
+  }, [currentIndex, isPlaying, lesson, playCurrent, stop, next, previous]);
 
   if (!lesson) {
     return (

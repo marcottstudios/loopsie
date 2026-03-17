@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { PauseDuration, Speed, PlaybackTemplate } from '../types';
 
 export type LoopSource =
+  | { type: 'all' }
   | { type: 'lesson'; lessonId: string }
   | { type: 'category'; categoryId: string }
   | { type: 'browse' }

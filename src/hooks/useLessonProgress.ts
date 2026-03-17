@@ -16,6 +16,7 @@ interface PhraseLessonState {
 
 export function useLessonProgress(phraseIds: string[]) {
   const [states, setStates] = useState<Record<string, PhraseLessonState>>({});
+  const phraseIdsKey = phraseIds.join(',');
 
   // Load initial favorite states from Dexie
   useEffect(() => {
@@ -30,7 +31,7 @@ export function useLessonProgress(phraseIds: string[]) {
       }
       setStates(initial);
     })();
-  }, [phraseIds.join(',')]);
+  }, [phraseIdsKey]);
 
   const getState = useCallback(
     (phraseId: string): PhraseLessonState =>
