@@ -5,6 +5,7 @@ import { phrases } from '../data/content';
 import { usePlayerStore } from '../stores/playerStore';
 import { useLessonProgress } from '../hooks/useLessonProgress';
 import { incrementTimesPlayed } from '../lib/db';
+import { playPhraseSequence } from '../lib/AudioEngine';
 import { updateMediaSession, clearMediaSession } from '../lib/mediaSession';
 import { useSettings } from '../hooks/useSettings';
 import PhraseCard from '../components/PhraseCard';
@@ -131,15 +132,25 @@ export default function LessonPlayerPage() {
           }}
           onSlow={() => {
             const store = usePlayerStore.getState();
-            const originalSpeed = store.speed;
+            if (store._cancelFn) store._cancelFn();
             incrementTimesPlayed(currentPhrase.id);
-            store.setSpeed(0.75);
-            store.playCurrent();
-            const unsub = usePlayerStore.subscribe((state) => {
-              if (!state.isPlaying) {
-                store.setSpeed(originalSpeed);
-                unsub();
-              }
+
+            const cancel = playPhraseSequence(currentPhrase.id, {
+              template: store.template,
+              speed: 0.75,
+              pauseDuration: store.pauseDuration,
+              onStepChange: (step) => {
+                usePlayerStore.setState({ currentStep: step });
+              },
+              onSequenceComplete: () => {
+                usePlayerStore.setState({ isPlaying: false, currentStep: null, _cancelFn: null });
+              },
+            });
+
+            usePlayerStore.setState({
+              isPlaying: true,
+              currentPhraseId: currentPhrase.id,
+              _cancelFn: cancel,
             });
           }}
           onPrevious={previous}

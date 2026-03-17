@@ -29,10 +29,12 @@ function FilterChip({
   label,
   active,
   onClick,
+  darkMode,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
+  darkMode: boolean;
 }) {
   return (
     <button
@@ -40,7 +42,9 @@ function FilterChip({
       className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
         active
           ? 'bg-teal-500 text-white'
-          : 'bg-white border border-slate-200 text-slate-600'
+          : darkMode
+            ? 'bg-slate-900 border border-slate-800 text-slate-200'
+            : 'bg-white border border-slate-200 text-slate-600'
       }`}
     >
       {label}
@@ -91,7 +95,15 @@ export default function BrowsePage() {
   const handleLoopThese = () => {
     const ids = filtered.map((p) => p.id);
     if (ids.length === 0) return;
-    setSource({ type: 'category', categoryId: selectedCategory ?? '' }, ids);
+    setSource(
+      selectedCategory &&
+        !selectedSituation &&
+        !selectedLength &&
+        !selectedDifficulty
+        ? { type: 'category', categoryId: selectedCategory }
+        : { type: 'browse' },
+      ids
+    );
     navigate('/loop/play');
   };
 
@@ -157,6 +169,7 @@ export default function BrowsePage() {
                   key={c.id}
                   label={c.label}
                   active={selectedCategory === c.id}
+                  darkMode={settings.darkMode}
                   onClick={() =>
                     setSelectedCategory(selectedCategory === c.id ? null : c.id)
                   }
@@ -173,6 +186,7 @@ export default function BrowsePage() {
                   key={s.id}
                   label={s.label}
                   active={selectedSituation === s.id}
+                  darkMode={settings.darkMode}
                   onClick={() =>
                     setSelectedSituation(selectedSituation === s.id ? null : s.id)
                   }
@@ -189,6 +203,7 @@ export default function BrowsePage() {
                   key={l.id}
                   label={l.label}
                   active={selectedLength === l.id}
+                  darkMode={settings.darkMode}
                   onClick={() =>
                     setSelectedLength(selectedLength === l.id ? null : l.id)
                   }
@@ -205,6 +220,7 @@ export default function BrowsePage() {
                   key={d.id}
                   label={d.label}
                   active={selectedDifficulty === d.id}
+                  darkMode={settings.darkMode}
                   onClick={() =>
                     setSelectedDifficulty(selectedDifficulty === d.id ? null : d.id)
                   }
