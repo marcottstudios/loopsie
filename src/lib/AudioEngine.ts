@@ -6,6 +6,18 @@ const PAUSE_MS: Record<PauseDuration, number> = {
   long: 3500,
 };
 
+// Singleton audio element — reused across all playback to maintain
+// the user-gesture permission on mobile browsers (iOS Safari blocks
+// audio.play() on newly created Audio elements without user interaction)
+let sharedAudio: HTMLAudioElement | null = null;
+
+function getSharedAudio(): HTMLAudioElement {
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+  }
+  return sharedAudio;
+}
+
 export interface AudioEngineOptions {
   template: PlaybackTemplate;
   speed: Speed;
@@ -27,16 +39,14 @@ export function playPhraseSequence(
   options: AudioEngineOptions
 ): () => void {
   let cancelled = false;
-  let currentAudio: HTMLAudioElement | null = null;
   let pauseTimer: ReturnType<typeof setTimeout> | null = null;
 
   const cancel = () => {
     cancelled = true;
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio = null;
-    }
+    const audio = getSharedAudio();
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
     if (pauseTimer) {
       clearTimeout(pauseTimer);
       pauseTimer = null;
@@ -47,22 +57,26 @@ export function playPhraseSequence(
     return new Promise((resolve, reject) => {
       if (cancelled) return reject(new Error('cancelled'));
 
-      const audio = new Audio(path);
+      const audio = getSharedAudio();
+
+      const onEnded = () => {
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+        resolve();
+      };
+      const onError = () => {
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+        resolve();
+      };
+
+      audio.addEventListener('ended', onEnded);
+      audio.addEventListener('error', onError);
       audio.playbackRate = rate;
-      currentAudio = audio;
-
-      audio.addEventListener('ended', () => {
-        currentAudio = null;
-        resolve();
-      });
-      audio.addEventListener('error', () => {
-        currentAudio = null;
-        // Resolve instead of reject so sequence continues even if a file is missing
-        resolve();
-      });
-
+      audio.src = path;
       audio.play().catch(() => {
-        currentAudio = null;
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
         resolve();
       });
     });

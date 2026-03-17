@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, X } from 'lucide-react';
 import { phrases as allPhrases } from '../data/content';
@@ -21,13 +21,13 @@ export default function LoopPlayerPage() {
     pauseDuration,
     setIsPlaying,
     advanceIndex,
+    setCurrentIndex,
     reset,
   } = useLoopStore();
   const { settings } = useSettings();
 
   const cancelRef = useRef<(() => void) | null>(null);
   const repeatRef = useRef(0);
-  const playCurrentPhraseRef = useRef<(() => void) | null>(null);
 
   // Redirect if no phrases loaded
   useEffect(() => {
@@ -36,54 +36,58 @@ export default function LoopPlayerPage() {
     }
   }, [phraseIds.length, navigate]);
 
-  const playCurrentPhrase = useCallback(() => {
-    const phraseId = phraseIds[currentIndex];
+  // Core play function — reads state directly from store to avoid stale closures
+  function playPhrase() {
+    const store = useLoopStore.getState();
+    const phraseId = store.phraseIds[store.currentIndex];
     if (!phraseId) return;
 
     if (cancelRef.current) cancelRef.current();
     incrementTimesPlayed(phraseId);
 
     const cancel = playPhraseSequence(phraseId, {
-      template,
-      speed,
-      pauseDuration,
+      template: store.template,
+      speed: store.speed,
+      pauseDuration: store.pauseDuration,
       onSequenceComplete: () => {
         repeatRef.current += 1;
-        if (repeatRef.current < repeatCount) {
-          // Play same phrase again
-          playCurrentPhraseRef.current?.();
+        const s = useLoopStore.getState();
+        if (repeatRef.current < s.repeatCount) {
+          playPhrase();
         } else {
-          // Move to next phrase
           repeatRef.current = 0;
-          advanceIndex();
+          // Advance index then play next
+          const nextIndex = (s.currentIndex + 1) % s.phraseIds.length;
+          useLoopStore.setState({ currentIndex: nextIndex });
         }
       },
     });
 
     cancelRef.current = cancel;
-  }, [phraseIds, currentIndex, template, speed, pauseDuration, repeatCount, advanceIndex]);
+  }
 
-  useEffect(() => {
-    playCurrentPhraseRef.current = playCurrentPhrase;
-  }, [playCurrentPhrase]);
-
-  // Auto-play when index changes and isPlaying
+  // Play when currentIndex changes and isPlaying is true
   useEffect(() => {
     if (isPlaying && phraseIds.length > 0) {
       repeatRef.current = 0;
-      playCurrentPhrase();
+      playPhrase();
     }
     return () => {
-      if (cancelRef.current) cancelRef.current();
+      if (cancelRef.current) {
+        cancelRef.current();
+        cancelRef.current = null;
+      }
     };
-  }, [currentIndex, isPlaying, phraseIds.length, playCurrentPhrase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, isPlaying]);
 
   // Auto-start on mount
   useEffect(() => {
     if (phraseIds.length > 0 && !isPlaying) {
       setIsPlaying(true);
     }
-  }, [phraseIds.length, isPlaying, setIsPlaying]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Media Session for lock screen controls
   useEffect(() => {
