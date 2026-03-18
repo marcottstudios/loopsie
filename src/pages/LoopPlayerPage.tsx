@@ -45,10 +45,12 @@ export default function LoopPlayerPage() {
     if (cancelRef.current) cancelRef.current();
     incrementTimesPlayed(phraseId);
 
+    const phrase = allPhrases.find((p) => p.id === phraseId);
     const cancel = playPhraseSequence(phraseId, {
       template: store.template,
       speed: store.speed,
       pauseDuration: store.pauseDuration,
+      hasFemVariant: !!phrase?.ptFem,
       onSequenceComplete: () => {
         repeatRef.current += 1;
         const s = useLoopStore.getState();

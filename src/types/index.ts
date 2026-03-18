@@ -43,6 +43,9 @@ export interface Phrase {
   en: string;
   pt: string;
   ptPhonetic?: string;
+  /** Feminine variant of pt (e.g. "obrigada" vs "obrigado") */
+  ptFem?: string;
+  ptFemPhonetic?: string;
   lengthBand: LengthBand;
   category: Category;
   situations: Situation[];

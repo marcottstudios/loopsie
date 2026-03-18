@@ -102,10 +102,12 @@ export default function BrowsePage() {
   const handlePlayPhrase = (phraseId: string) => {
     if (cancelFn) cancelFn();
     incrementTimesPlayed(phraseId);
+    const phrase = filtered.find((p) => p.id === phraseId);
     const cancel = playPhraseSequence(phraseId, {
       template: settings.playbackTemplate,
       speed: settings.speed,
       pauseDuration: settings.pauseDuration,
+      hasFemVariant: !!phrase?.ptFem,
     });
     setCancelFn(() => cancel);
   };

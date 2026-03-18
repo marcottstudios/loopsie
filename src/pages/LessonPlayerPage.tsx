@@ -37,7 +37,10 @@ export default function LessonPlayerPage() {
   // Load lesson into the player store
   useEffect(() => {
     if (lesson) {
-      loadLesson(lesson.id, lesson.phraseIds);
+      const femIds = new Set(
+        lesson.phraseIds.filter((pid) => phrases.find((p) => p.id === pid)?.ptFem)
+      );
+      loadLesson(lesson.id, lesson.phraseIds, femIds);
     }
     return () => {
       stop();
@@ -144,6 +147,7 @@ export default function LessonPlayerPage() {
               template: store.template,
               speed: 0.75,
               pauseDuration: store.pauseDuration,
+              hasFemVariant: store.femVariantIds.has(currentPhrase.id),
               onStepChange: (step) => {
                 usePlayerStore.setState({ currentStep: step });
               },

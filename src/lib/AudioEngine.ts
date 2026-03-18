@@ -22,6 +22,8 @@ export interface AudioEngineOptions {
   template: PlaybackTemplate;
   speed: Speed;
   pauseDuration: PauseDuration;
+  /** Whether this phrase has a feminine audio variant */
+  hasFemVariant?: boolean;
   onStepChange?: (step: string) => void;
   onSequenceComplete?: () => void;
 }
@@ -95,8 +97,10 @@ export function playPhraseSequence(
 
   const enPath = `/audio/en/${phraseId}.mp3`;
   const ptPath = `/audio/pt/${phraseId}.mp3`;
+  const ptFemPath = `/audio/pt-fem/${phraseId}.mp3`;
   const rate = options.speed;
   const pauseMs = PAUSE_MS[options.pauseDuration];
+  const hasFem = options.hasFemVariant ?? false;
 
   const buildSteps = (): Array<() => Promise<void>> => {
     const steps: Array<() => Promise<void>> = [];
@@ -112,11 +116,25 @@ export function playPhraseSequence(
           options.onStepChange?.('pt');
           return playFile(ptPath, rate);
         });
+        if (hasFem) {
+          steps.push(() => wait(400));
+          steps.push(() => {
+            options.onStepChange?.('pt-fem');
+            return playFile(ptFemPath, rate);
+          });
+        }
         steps.push(() => wait(400));
         steps.push(() => {
           options.onStepChange?.('pt-repeat');
           return playFile(ptPath, rate);
         });
+        if (hasFem) {
+          steps.push(() => wait(400));
+          steps.push(() => {
+            options.onStepChange?.('pt-fem-repeat');
+            return playFile(ptFemPath, rate);
+          });
+        }
         break;
 
       case 'standard':
@@ -129,6 +147,13 @@ export function playPhraseSequence(
           options.onStepChange?.('pt');
           return playFile(ptPath, rate);
         });
+        if (hasFem) {
+          steps.push(() => wait(400));
+          steps.push(() => {
+            options.onStepChange?.('pt-fem');
+            return playFile(ptFemPath, rate);
+          });
+        }
         break;
 
       case 'pt-only':
@@ -136,6 +161,13 @@ export function playPhraseSequence(
           options.onStepChange?.('pt');
           return playFile(ptPath, rate);
         });
+        if (hasFem) {
+          steps.push(() => wait(400));
+          steps.push(() => {
+            options.onStepChange?.('pt-fem');
+            return playFile(ptFemPath, rate);
+          });
+        }
         break;
     }
 

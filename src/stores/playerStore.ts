@@ -6,7 +6,7 @@ interface PlayerState {
   // Current playback
   isPlaying: boolean;
   currentPhraseId: string | null;
-  currentStep: string | null; // 'en' | 'pt' | 'pt-repeat' | 'pause' | 'done'
+  currentStep: string | null; // 'en' | 'pt' | 'pt-fem' | 'pt-repeat' | 'pause' | 'done'
 
   // Settings (runtime defaults, overridden by Dexie settings in Step 12)
   template: PlaybackTemplate;
@@ -18,13 +18,17 @@ interface PlayerState {
   phraseIds: string[];
   currentIndex: number;
 
+  /** Set of phrase IDs that have feminine audio variants */
+  femVariantIds: Set<string>;
+
   // Internal
   _cancelFn: (() => void) | null;
 }
 
 interface PlayerActions {
   // Lesson setup
-  loadLesson: (lessonId: string, phraseIds: string[]) => void;
+  loadLesson: (lessonId: string, phraseIds: string[], femVariantIds?: Set<string>) => void;
+  setFemVariantIds: (ids: Set<string>) => void;
 
   // Playback
   playCurrent: () => void;
@@ -57,9 +61,12 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   lessonId: null,
   phraseIds: [],
   currentIndex: 0,
+  femVariantIds: new Set(),
   _cancelFn: null,
 
-  loadLesson: (lessonId, phraseIds) => {
+  setFemVariantIds: (ids) => set({ femVariantIds: ids }),
+
+  loadLesson: (lessonId, phraseIds, femVariantIds) => {
     const { _cancelFn } = get();
     if (_cancelFn) _cancelFn();
 
@@ -71,6 +78,7 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       isPlaying: false,
       currentStep: null,
       _cancelFn: null,
+      femVariantIds: femVariantIds ?? new Set(),
     });
   },
 
@@ -86,6 +94,7 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       template: state.template,
       speed: state.speed,
       pauseDuration: state.pauseDuration,
+      hasFemVariant: state.femVariantIds.has(phraseId),
       onStepChange: (step) => {
         set({ currentStep: step });
       },

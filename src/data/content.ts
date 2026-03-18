@@ -13,7 +13,7 @@ export const phrases: Phrase[] = [
   { id: 'greet-005', en: 'How are you?', pt: 'Como está?', ptPhonetic: 'KOH-moo shTAH', lengthBand: '2-word', category: 'greetings', situations: ['meeting-people', 'general'], difficulty: 'beginner', lessonId: 'lesson-001', sortOrder: 5 },
 
   // === Lesson 2: Farewells ===
-  { id: 'greet-006', en: "I'm fine, thank you", pt: 'Estou bem, obrigado', ptPhonetic: 'shTOH baym, oh-bree-GAH-doo', lengthBand: '3-word', category: 'greetings', situations: ['meeting-people', 'general'], difficulty: 'beginner', lessonId: 'lesson-002', sortOrder: 6 },
+  { id: 'greet-006', en: "I'm fine, thank you", pt: 'Estou bem, obrigado', ptPhonetic: 'shTOH baym, oh-bree-GAH-doo', ptFem: 'Estou bem, obrigada', ptFemPhonetic: 'shTOH baym, oh-bree-GAH-dah', lengthBand: '3-word', category: 'greetings', situations: ['meeting-people', 'general'], difficulty: 'beginner', lessonId: 'lesson-002', sortOrder: 6 },
   { id: 'greet-007', en: 'Nice to meet you', pt: 'Prazer em conhecê-lo', ptPhonetic: 'prah-ZEHR aym koh-nyeh-SEH-loo', lengthBand: '3-word', category: 'greetings', situations: ['meeting-people'], difficulty: 'beginner-plus', lessonId: 'lesson-002', sortOrder: 7 },
   { id: 'greet-008', en: 'Goodbye', pt: 'Adeus', ptPhonetic: 'ah-DEH-oosh', lengthBand: '1-word', category: 'greetings', situations: ['meeting-people', 'general'], difficulty: 'beginner', lessonId: 'lesson-002', sortOrder: 8 },
   { id: 'greet-009', en: 'See you later', pt: 'Até logo', ptPhonetic: 'ah-TEH LOH-goo', lengthBand: '2-word', category: 'greetings', situations: ['meeting-people', 'general'], difficulty: 'beginner', lessonId: 'lesson-002', sortOrder: 9 },
@@ -21,13 +21,13 @@ export const phrases: Phrase[] = [
 
   // === Lesson 3: Polite Essentials ===
   { id: 'polite-001', en: 'Please', pt: 'Por favor', ptPhonetic: 'poor fah-VOHR', lengthBand: '2-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 11 },
-  { id: 'polite-002', en: 'Thank you', pt: 'Obrigado', ptPhonetic: 'oh-bree-GAH-doo', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 12 },
+  { id: 'polite-002', en: 'Thank you', pt: 'Obrigado', ptPhonetic: 'oh-bree-GAH-doo', ptFem: 'Obrigada', ptFemPhonetic: 'oh-bree-GAH-dah', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 12 },
   { id: 'polite-003', en: "You're welcome", pt: 'De nada', ptPhonetic: 'deh NAH-dah', lengthBand: '2-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 13 },
   { id: 'polite-004', en: 'Excuse me', pt: 'Com licença', ptPhonetic: 'kohm lee-SEN-sah', lengthBand: '2-word', category: 'politeness', situations: ['general', 'in-a-shop', 'asking-directions'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 14 },
   { id: 'polite-005', en: "I'm sorry", pt: 'Desculpe', ptPhonetic: 'desh-KOOL-peh', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 15 },
   { id: 'polite-006', en: 'Yes', pt: 'Sim', ptPhonetic: 'seem', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 16 },
   { id: 'polite-007', en: 'No', pt: 'Não', ptPhonetic: 'nowng', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 17 },
-  { id: 'polite-008', en: 'Thank you very much', pt: 'Muito obrigado', ptPhonetic: 'MWEEN-too oh-bree-GAH-doo', lengthBand: '2-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 18 },
+  { id: 'polite-008', en: 'Thank you very much', pt: 'Muito obrigado', ptPhonetic: 'MWEEN-too oh-bree-GAH-doo', ptFem: 'Muito obrigada', ptFemPhonetic: 'MWEEN-too oh-bree-GAH-dah', lengthBand: '2-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 18 },
   { id: 'polite-009', en: 'No problem', pt: 'Sem problema', ptPhonetic: 'saym proh-BLEH-mah', lengthBand: '2-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 19 },
   { id: 'polite-010', en: 'Of course', pt: 'Claro', ptPhonetic: 'KLAH-roo', lengthBand: '1-word', category: 'politeness', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-003', sortOrder: 20 },
 
@@ -247,8 +247,8 @@ export const phrases: Phrase[] = [
   { id: 'feel-010', en: "I don't want", pt: 'Não quero', ptPhonetic: 'nowng KEH-roo', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-021', sortOrder: 183 },
 
   // === Lesson 22: Expressing Yourself ===
-  { id: 'feel-011', en: "I'm lost", pt: 'Estou perdido', ptPhonetic: 'shTOH pehr-DEE-doo', lengthBand: '2-word', category: 'feelings-needs', situations: ['asking-directions', 'general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 184 },
-  { id: 'feel-012', en: "I'm tired", pt: 'Estou cansado', ptPhonetic: 'shTOH kahn-SAH-doo', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 185 },
+  { id: 'feel-011', en: "I'm lost", pt: 'Estou perdido', ptPhonetic: 'shTOH pehr-DEE-doo', ptFem: 'Estou perdida', ptFemPhonetic: 'shTOH pehr-DEE-dah', lengthBand: '2-word', category: 'feelings-needs', situations: ['asking-directions', 'general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 184 },
+  { id: 'feel-012', en: "I'm tired", pt: 'Estou cansado', ptPhonetic: 'shTOH kahn-SAH-doo', ptFem: 'Estou cansada', ptFemPhonetic: 'shTOH kahn-SAH-dah', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 185 },
   { id: 'feel-013', en: "I'm happy", pt: 'Estou feliz', ptPhonetic: 'shTOH feh-LEESH', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 186 },
   { id: 'feel-014', en: "I'm cold", pt: 'Tenho frio', ptPhonetic: 'TEH-nyoo FREE-oo', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 187 },
   { id: 'feel-015', en: "I'm hot", pt: 'Tenho calor', ptPhonetic: 'TEH-nyoo kah-LOHR', lengthBand: '2-word', category: 'feelings-needs', situations: ['general'], difficulty: 'beginner', lessonId: 'lesson-022', sortOrder: 188 },

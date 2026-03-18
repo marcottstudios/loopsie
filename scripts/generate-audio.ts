@@ -28,6 +28,7 @@ interface PhraseData {
   id: string;
   en: string;
   pt: string;
+  ptFem?: string;
 }
 
 function extractPhrases(): PhraseData[] {
@@ -35,17 +36,20 @@ function extractPhrases(): PhraseData[] {
   const idRegex = /id:\s*'([^']+)'/;
   const enRegex = /en:\s*(?:'([^']*(?:\\.[^']*)*)'|"([^"]*(?:\\.[^"]*)*)")/;
   const ptRegex = /pt:\s*'([^']*(?:\\.[^']*)*)'/;
+  const ptFemRegex = /ptFem:\s*'([^']*(?:\\.[^']*)*)'/;
   const blocks = contentRaw.split(/\n {2}\{/).slice(1);
 
   for (const block of blocks) {
     const idMatch = block.match(idRegex);
     const enMatch = block.match(enRegex);
     const ptMatch = block.match(ptRegex);
+    const ptFemMatch = block.match(ptFemRegex);
     if (idMatch && enMatch && ptMatch) {
       phrases.push({
         id: idMatch[1],
         en: enMatch[1] ?? enMatch[2],
         pt: ptMatch[1],
+        ptFem: ptFemMatch?.[1],
       });
     }
   }
@@ -57,8 +61,10 @@ console.log(`Found ${phrases.length} phrases to generate audio for.\n`);
 
 const EN_DIR = path.join(ROOT, 'public', 'audio', 'en');
 const PT_DIR = path.join(ROOT, 'public', 'audio', 'pt');
+const PT_FEM_DIR = path.join(ROOT, 'public', 'audio', 'pt-fem');
 fs.mkdirSync(EN_DIR, { recursive: true });
 fs.mkdirSync(PT_DIR, { recursive: true });
+fs.mkdirSync(PT_FEM_DIR, { recursive: true });
 
 const forceRegen = process.argv.includes('--force');
 
@@ -66,6 +72,7 @@ async function googleTTS(
   text: string,
   languageCode: string,
   voiceName: string,
+  ssmlGender: string,
   outputPath: string
 ): Promise<boolean> {
   if (fs.existsSync(outputPath) && !forceRegen) {
@@ -79,7 +86,7 @@ async function googleTTS(
     voice: {
       languageCode,
       name: voiceName,
-      ssmlGender: 'FEMALE',
+      ssmlGender,
     },
     audioConfig: {
       audioEncoding: 'MP3',
@@ -107,9 +114,12 @@ async function googleTTS(
 
 // Google Cloud TTS voices:
 // English: en-US-Wavenet-F (clear female)
-// Portuguese (European): pt-PT-Wavenet-A (female EU-PT voice)
+// Portuguese (European):
+//   pt-PT-Wavenet-B — Male voice (for masculine forms)
+//   pt-PT-Wavenet-A — Female voice (for feminine forms)
 const EN_VOICE = 'en-US-Wavenet-F';
-const PT_VOICE = 'pt-PT-Wavenet-A';
+const PT_MALE_VOICE = 'pt-PT-Wavenet-B';
+const PT_FEMALE_VOICE = 'pt-PT-Wavenet-A';
 
 async function main() {
   let success = 0;
@@ -119,18 +129,30 @@ async function main() {
     // English
     const enPath = path.join(EN_DIR, `${phrase.id}.mp3`);
     process.stdout.write(`[EN] ${phrase.id}: "${phrase.en}" ... `);
-    const enOk = await googleTTS(phrase.en, 'en-US', EN_VOICE, enPath);
+    const enOk = await googleTTS(phrase.en, 'en-US', EN_VOICE, 'FEMALE', enPath);
     console.log(enOk ? '✓' : '✗');
     if (enOk) success++;
     else failed++;
 
-    // European Portuguese
+    // European Portuguese — masculine (male voice for gendered, female voice otherwise)
     const ptPath = path.join(PT_DIR, `${phrase.id}.mp3`);
-    process.stdout.write(`[PT] ${phrase.id}: "${phrase.pt}" ... `);
-    const ptOk = await googleTTS(phrase.pt, 'pt-PT', PT_VOICE, ptPath);
+    const ptVoice = phrase.ptFem ? PT_MALE_VOICE : PT_FEMALE_VOICE;
+    const ptGender = phrase.ptFem ? 'MALE' : 'FEMALE';
+    process.stdout.write(`[PT] ${phrase.id}: "${phrase.pt}" (${ptGender.toLowerCase()}) ... `);
+    const ptOk = await googleTTS(phrase.pt, 'pt-PT', ptVoice, ptGender, ptPath);
     console.log(ptOk ? '✓' : '✗');
     if (ptOk) success++;
     else failed++;
+
+    // Feminine variant (female voice)
+    if (phrase.ptFem) {
+      const ptFemPath = path.join(PT_FEM_DIR, `${phrase.id}.mp3`);
+      process.stdout.write(`[PT-FEM] ${phrase.id}: "${phrase.ptFem}" (female) ... `);
+      const ptFemOk = await googleTTS(phrase.ptFem, 'pt-PT', PT_FEMALE_VOICE, 'FEMALE', ptFemPath);
+      console.log(ptFemOk ? '✓' : '✗');
+      if (ptFemOk) success++;
+      else failed++;
+    }
   }
 
   console.log(`\nDone! ${success} generated, ${failed} failed.`);
