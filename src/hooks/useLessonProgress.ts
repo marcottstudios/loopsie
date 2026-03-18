@@ -21,12 +21,19 @@ export function useLessonProgress(phraseIds: string[]) {
   // Load initial favorite states from Dexie
   useEffect(() => {
     (async () => {
+      const now = Date.now();
+      const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
       const initial: Record<string, PhraseLessonState> = {};
       for (const id of phraseIds) {
         const progress = await getProgress(id);
+        let rating: PhraseRating = null;
+        if (progress?.reviewDueAt) {
+          // If due date is > 2 days out, it was marked easy; otherwise practice
+          rating = progress.reviewDueAt - now > TWO_DAYS ? 'easy' : 'practice';
+        }
         initial[id] = {
           isFavorite: progress?.isFavorite ?? false,
-          rating: null,
+          rating,
         };
       }
       setStates(initial);

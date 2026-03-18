@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { liveQuery } from 'dexie';
-import { Repeat, BookOpen, FolderOpen, Heart, RotateCcw, Globe } from 'lucide-react';
+import { Repeat, BookOpen, FolderOpen, Heart, RotateCcw, Globe, Shuffle } from 'lucide-react';
 import { lessons } from '../data/lessons';
 import { phrases } from '../data/content';
 import { categories } from '../data/categories';
@@ -14,8 +14,10 @@ type SourceType = 'all' | 'lesson' | 'category' | 'favorites' | 'review';
 export default function LoopSetupPage() {
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const { setSource, repeatCount, setRepeatCount, pauseDuration, setPauseDuration } =
-    useLoopStore();
+  const {
+    setSource, repeatCount, setRepeatCount, pauseDuration, setPauseDuration,
+    shuffle, setShuffle, buildPlayOrder,
+  } = useLoopStore();
 
   const [sourceType, setSourceType] = useState<SourceType>('lesson');
   const [selectedLessonId, setSelectedLessonId] = useState(lessons[0]?.id ?? '');
@@ -62,7 +64,7 @@ export default function LoopSetupPage() {
   const resolvedIds = resolveIds();
   const isEmpty = resolvedIds.length === 0;
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (isEmpty) return;
 
     const source: LoopSource =
@@ -77,6 +79,21 @@ export default function LoopSetupPage() {
               : { type: 'review' };
 
     setSource(source, resolvedIds);
+
+    // Build play order (shuffle + smart weighting if enabled)
+    if (shuffle) {
+      const allProgress = await db.phraseProgress.toArray();
+      const now = Date.now();
+      const practiceIds = new Set(
+        allProgress
+          .filter((p) => p.reviewDueAt !== null && p.reviewDueAt <= now)
+          .map((p) => p.phraseId)
+      );
+      buildPlayOrder(practiceIds);
+    } else {
+      buildPlayOrder();
+    }
+
     navigate('/loop/play');
   };
 
@@ -198,6 +215,28 @@ export default function LoopSetupPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Shuffle toggle */}
+      <div>
+        <button
+          onClick={() => setShuffle(!shuffle)}
+          className={`w-full flex items-center justify-between p-3 rounded-lg text-sm font-medium transition-colors ${
+            shuffle
+              ? 'bg-teal-500 text-white'
+              : settings.darkMode
+                ? 'bg-slate-950 border border-slate-800 text-slate-200'
+                : 'bg-white border border-slate-200 text-slate-600'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Shuffle size={18} />
+            Shuffle
+          </span>
+          <span className="text-xs opacity-70">
+            {shuffle ? 'ON — practice phrases appear more often' : 'OFF — sequential order'}
+          </span>
+        </button>
       </div>
 
       {/* Phrase count / empty state */}
