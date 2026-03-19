@@ -17,6 +17,7 @@ interface PlayerState {
   lessonId: string | null;
   phraseIds: string[];
   currentIndex: number;
+  autoAdvance: boolean;
 
   /** Set of phrase IDs that have feminine audio variants */
   femVariantIds: Set<string>;
@@ -61,6 +62,7 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   lessonId: null,
   phraseIds: [],
   currentIndex: 0,
+  autoAdvance: true,
   femVariantIds: new Set(),
   _cancelFn: null,
 
@@ -99,7 +101,21 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
         set({ currentStep: step });
       },
       onSequenceComplete: () => {
-        set({ isPlaying: false, currentStep: null, _cancelFn: null });
+        const s = get();
+        const nextIndex = s.currentIndex + 1;
+        if (s.autoAdvance && nextIndex < s.phraseIds.length) {
+          // Auto-advance to next phrase
+          set({
+            currentIndex: nextIndex,
+            currentPhraseId: s.phraseIds[nextIndex],
+            currentStep: null,
+            _cancelFn: null,
+          });
+          // Play next after state update
+          setTimeout(() => get().playCurrent(), 300);
+        } else {
+          set({ isPlaying: false, currentStep: null, _cancelFn: null });
+        }
       },
     });
 
